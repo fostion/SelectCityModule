@@ -14,6 +14,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * 字母索引
+ */
 public class SideBar extends View {
 
     public static String[] INDEX_STRING = {"A", "B", "C", "D", "E", "F", "G", "H", "I",

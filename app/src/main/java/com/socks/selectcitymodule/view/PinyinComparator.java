@@ -2,9 +2,12 @@ package com.socks.selectcitymodule.view;
 
 import java.util.Comparator;
 
-public class PinyinComparator implements Comparator<CitySortModel> {
+/**
+ * 拼音排序器
+ */
+public class PinyinComparator implements Comparator<CityBean> {
 
-	public int compare(CitySortModel o1, CitySortModel o2) {
+	public int compare(CityBean o1, CityBean o2) {
 		if (o1.getSortLetters().equals("@")
 				|| o2.getSortLetters().equals("#")) {
 			return -1;

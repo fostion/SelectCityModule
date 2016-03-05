@@ -1,93 +1,137 @@
 package com.socks.selectcitymodule;
 
-import android.content.Context;
+import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.BaseAdapter;
-import android.widget.SectionIndexer;
 import android.widget.TextView;
 
-import com.socks.selectcitymodule.view.CitySortModel;
+import com.socks.selectcitymodule.view.CityBean;
 
 import java.util.List;
 
-public class SortAdapter extends BaseAdapter implements SectionIndexer {
-    private List<CitySortModel> list = null;
-    private Context mContext;
+import javax.xml.validation.TypeInfoProvider;
 
-    public SortAdapter(Context mContext, List<CitySortModel> list) {
-        this.mContext = mContext;
-        this.list = list;
+/**
+ * 排序adapter
+ */
+public class SortAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>{
+
+    private final int TYPE_TAG = 0;
+    private final int TYPE_ITEM = 1;
+    private List<CityBean> citys;
+    private OnItemClickListener onItemClickListener = null;
+
+    public SortAdapter(List<CityBean> _citys){
+        this.citys = _citys;
     }
 
-    public int getCount() {
-        return this.list.size();
-    }
-
-    public Object getItem(int position) {
-        return list.get(position);
-    }
-
-    public long getItemId(int position) {
-        return position;
-    }
-
-    public View getView(final int position, View view, ViewGroup arg2) {
-        ViewHolder viewHolder = null;
-        final CitySortModel mContent = list.get(position);
-        if (view == null) {
-            viewHolder = new ViewHolder();
-            view = LayoutInflater.from(mContext).inflate(R.layout.item_select_city, null);
-            viewHolder.tvTitle = (TextView) view.findViewById(R.id.tv_city_name);
-            viewHolder.tvLetter = (TextView) view.findViewById(R.id.tv_catagory);
-            view.setTag(viewHolder);
+    @Override
+    public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        if(viewType == TYPE_TAG){
+            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_tag,parent,false);
+            return new TagViewHolder(view);
         } else {
-            viewHolder = (ViewHolder) view.getTag();
+            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_city,parent,false);
+            return new ItemViewHolder(view);
+        }
+    }
+
+    @Override
+    public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
+        if(holder instanceof TagViewHolder){
+            TagViewHolder tagViewHolder = (TagViewHolder)holder;
+            tagViewHolder.setData(citys.get(position));
+        } else {
+            ItemViewHolder itemViewHolder = (ItemViewHolder)holder;
+            itemViewHolder.setData(citys.get(position));
         }
 
-        int section = getSectionForPosition(position);
+    }
 
-        if (position == getPositionForSection(section)) {
-            viewHolder.tvLetter.setVisibility(View.VISIBLE);
-            viewHolder.tvLetter.setText(mContent.getSortLetters());
-        } else {
-            viewHolder.tvLetter.setVisibility(View.GONE);
+    /**
+     * 判断算法 第一位必须带tag，之后若是与前一位不同tag将将视为所有的开头
+     */
+    @Override
+    public int getItemViewType(int position) {
+        if(position == 0 || !citys.get(position).getSortLetters().equals(citys.get(position-1).getSortLetters())){
+            return TYPE_TAG;
         }
-
-        viewHolder.tvTitle.setText(this.list.get(position).getName());
-
-        return view;
-
+        return TYPE_ITEM;
     }
 
-
-    final static class ViewHolder {
-        TextView tvLetter;
-        TextView tvTitle;
-    }
-
-
-    public int getSectionForPosition(int position) {
-        return list.get(position).getSortLetters().charAt(0);
-    }
-
-
+    /** 判断是否第一个 这里有问题每次都是判断一下会出现卡顿 */
     public int getPositionForSection(int section) {
-        for (int i = 0; i < getCount(); i++) {
-            String sortStr = list.get(i).getSortLetters();
+        int i = 0;
+        for (CityBean cityBean:citys) {
+            String sortStr = cityBean.getSortLetters();
             char firstChar = sortStr.toUpperCase().charAt(0);
             if (firstChar == section) {
                 return i;
             }
+            i++;
         }
-
         return -1;
     }
 
-
     @Override
-    public Object[] getSections() {
-        return null;
+    public int getItemCount() {
+        return citys.size();
+    }
+
+    class TagViewHolder extends RecyclerView.ViewHolder{
+
+        TextView tagText;
+        TextView cityName;
+
+        public TagViewHolder(View view) {
+            super(view);
+            tagText = (TextView)view.findViewById(R.id.tv_catagory);
+            cityName = (TextView)view.findViewById(R.id.tv_city_name);
+        }
+
+        public void setData(final CityBean cityBean){
+            tagText.setText(cityBean.getSortLetters().toUpperCase());
+            cityName.setText(cityBean.getName());
+            cityName.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if(onItemClickListener != null){
+                        onItemClickListener.onItemClick(cityBean);
+                    }
+                }
+            });
+        }
+    }
+
+    class ItemViewHolder extends RecyclerView.ViewHolder{
+
+        TextView cityName;
+
+        public ItemViewHolder(View view) {
+            super(view);
+            cityName = (TextView)view.findViewById(R.id.tv_city_name);
+        }
+
+        public void setData(final CityBean cityBean){
+            cityName.setText(cityBean.getName());
+            itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if(onItemClickListener != null){
+                        onItemClickListener.onItemClick(cityBean);
+                    }
+                }
+            });
+        }
+    }
+
+    public void setOnItemClickListener(OnItemClickListener onItemClickListener) {
+        this.onItemClickListener = onItemClickListener;
+    }
+
+    interface OnItemClickListener{
+        void onItemClick(CityBean cityBean);
     }
 }

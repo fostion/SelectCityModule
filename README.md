@@ -7,3 +7,8 @@
 本项目改造自[http://blog.csdn.net/xiaanming/article/details/12684155](http://blog.csdn.net/xiaanming/article/details/12684155)
 
 修复了几个BUG和界面效果
+
+#####修复问题
+1. listview修改成recycleview
+2. 修改adapter算法(滑动卡顿问题)
+3. 添加全国城市列表

@@ -2,31 +2,37 @@ package com.socks.selectcitymodule;
 
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.view.View;
-import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemClickListener;
-import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.socks.selectcitymodule.view.CharacterParser;
-import com.socks.selectcitymodule.view.CitySortModel;
+import com.socks.selectcitymodule.view.CityBean;
 import com.socks.selectcitymodule.view.PinyinComparator;
 import com.socks.selectcitymodule.view.SideBar;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * 有一个问题无法将tag显示到第一个
+ */
 public class MainActivity extends AppCompatActivity {
 
-    private ListView sortListView;
+    private RecyclerView sortListView;
     private SideBar sideBar;
     private TextView dialog;
     private SortAdapter adapter;
     private CharacterParser characterParser;
-    private List<CitySortModel> SourceDateList;
+    private List<CityBean> SourceDateList;
 
     private Toolbar toolbar;
 
@@ -44,83 +50,95 @@ public class MainActivity extends AppCompatActivity {
 
     private void initViews() {
         characterParser = CharacterParser.getInstance();
-
+        sortListView = (RecyclerView) findViewById(R.id.country_lvcountry);
         sideBar = (SideBar) findViewById(R.id.sidrbar);
         dialog = (TextView) findViewById(R.id.dialog);
         sideBar.setTextView(dialog);
-        sideBar.setOnTouchingLetterChangedListener(new SideBar.OnTouchingLetterChangedListener() {
 
+        SourceDateList = filledJsonData(readFileToJson("city.json"));
+        //拼音排序将中文转换成英文开头排序，执行一次就可以了
+        Collections.sort(SourceDateList, new PinyinComparator());
+        adapter = new SortAdapter(SourceDateList);
+        sortListView.setLayoutManager(new LinearLayoutManager(this));
+        sortListView.setAdapter(adapter);
+
+        sideBar.setOnTouchingLetterChangedListener(new SideBar.OnTouchingLetterChangedListener() {
             @Override
             public void onTouchingLetterChanged(String s) {
+                //滑动到相应位置
                 int position = adapter.getPositionForSection(s.charAt(0));
                 if (position != -1) {
-                    sortListView.setSelection(position + 1);
+                    sortListView.scrollToPosition(position);
                 }
 
             }
         });
 
-        sortListView = (ListView) findViewById(R.id.country_lvcountry);
-        sortListView.setOnItemClickListener(new OnItemClickListener() {
-
+        adapter.setOnItemClickListener(new SortAdapter.OnItemClickListener() {
             @Override
-            public void onItemClick(AdapterView<?> parent, View view,
-                                    int position, long id) {
-                Toast.makeText(getApplication(),
-                        ((CitySortModel) adapter.getItem(position - 1)).getName(),
-                        Toast.LENGTH_SHORT).show();
+            public void onItemClick(CityBean cityBean) {
+                Toast.makeText(getApplication(), cityBean.getName(),Toast.LENGTH_SHORT).show();
             }
         });
-
-        SourceDateList = filledData(getResources().getStringArray(R.array.provinces));
-        Collections.sort(SourceDateList, new PinyinComparator());
-        adapter = new SortAdapter(this, SourceDateList);
-        sortListView.addHeaderView(initHeadView());
-        sortListView.setAdapter(adapter);
     }
 
+    private JSONArray readFileToJson(String fileName){
+        JSONArray cityObjs;
+        String result = "";
+        try {
+            String line;
+            InputStreamReader inputStreamReader = new InputStreamReader(this.getAssets().open(fileName));
+            BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+            while ((line = bufferedReader.readLine()) != null){
+                result += line;
+            }
+            cityObjs = new JSONArray(result);
 
-    private View initHeadView() {
-        View headView = getLayoutInflater().inflate(R.layout.item_select_city, null);
-        TextView tv_catagory = (TextView) headView.findViewById(R.id.tv_catagory);
-        TextView tv_city_name = (TextView) headView.findViewById(R.id.tv_city_name);
-        tv_catagory.setText("自动定位");
-        tv_city_name.setText("北京");
-        tv_city_name.setCompoundDrawablesWithIntrinsicBounds(getResources().getDrawable(R.drawable.ic_city_location), null, null, null);
-        tv_city_name.setCompoundDrawablePadding(24);
-        return headView;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+        return cityObjs;
     }
 
-    private List<CitySortModel> filledData(String[] date) {
-        List<CitySortModel> mSortList = new ArrayList<>();
+    private List<CityBean> filledJsonData(JSONArray cityArray) {
+        List<CityBean> mSortList = new ArrayList<>();
         ArrayList<String> indexString = new ArrayList<>();
 
-        for (int i = 0; i < date.length; i++) {
-            CitySortModel sortModel = new CitySortModel();
-            sortModel.setName(date[i]);
-            String pinyin = characterParser.getSelling(date[i]);
-            String sortString = pinyin.substring(0, 1).toUpperCase();
-            if (sortString.matches("[A-Z]")) {
+        try{
+            for (int i = 0; i < cityArray.length(); i++) {
+                JSONObject tempJsonObj = cityArray.getJSONObject(i);
+                CityBean sortModel = new CityBean();
+                sortModel.setId(tempJsonObj.getString("id"));
+                sortModel.setName(tempJsonObj.getString("name"));
+                sortModel.setLevel(tempJsonObj.getString("level"));
+                sortModel.setWepiao_id(tempJsonObj.getString("wepiao_id"));
+                sortModel.setParent_id(tempJsonObj.getString("parent_id"));
+                String pinyin = characterParser.getSelling(sortModel.getName());
+                String sortString = pinyin.substring(0, 1).toUpperCase();
+                if (sortString.matches("[A-Z]")) {
 
-                //对重庆多音字做特殊处理
-                if (pinyin.startsWith("zhongqing")) {
-                    sortString = "C";
-                    sortModel.setSortLetters("C");
-                } else {
-                    sortModel.setSortLetters(sortString.toUpperCase());
+                    //对重庆多音字做特殊处理
+                    if (pinyin.startsWith("zhongqing")) {
+                        sortString = "C";
+                        sortModel.setSortLetters("C");
+                    } else {
+                        sortModel.setSortLetters(sortString.toUpperCase());
+                    }
+
+                    if (!indexString.contains(sortString)) {
+                        indexString.add(sortString);
+                    }
                 }
 
-                if (!indexString.contains(sortString)) {
-                    indexString.add(sortString);
-                }
+                mSortList.add(sortModel);
             }
-
-            mSortList.add(sortModel);
+            Collections.sort(indexString);
+            sideBar.setIndexText(indexString);
+        } catch (Exception e){
+            e.printStackTrace();
         }
-        Collections.sort(indexString);
-        sideBar.setIndexText(indexString);
         return mSortList;
 
     }
-
 }
