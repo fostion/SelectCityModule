@@ -12,3 +12,6 @@
 1. listview修改成recycleview
 2. 修改adapter算法(滑动卡顿问题)
 3. 添加全国城市列表
+4. 修复sidebar显示小问题
+5. 修复recycleview中scollToPosition方法,使用方法：https://github.com/tyzlmjj/AndroidUI/tree/master/RecyclerViewLocation
+6. 修改文件目录形式，将控件封装成module
