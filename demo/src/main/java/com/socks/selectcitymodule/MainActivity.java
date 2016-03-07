@@ -8,11 +8,11 @@ import android.support.v7.widget.Toolbar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.socks.selectcity.adapter.SortAdapter;
 import com.socks.selectcity.bean.CityBean;
 import com.socks.selectcity.utils.CharacterParser;
 import com.socks.selectcity.utils.PinyinComparator;
 import com.socks.selectcity.view.SideBar;
+import com.socks.selectcitymodule.adapter.SortAdapter;
 
 import org.json.JSONArray;
 import org.json.JSONObject;

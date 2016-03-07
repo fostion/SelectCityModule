@@ -1,4 +1,4 @@
-package com.socks.selectcity.adapter;
+package com.socks.selectcitymodule.adapter;
 
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -6,8 +6,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import com.socks.selectcity.R;
+
 import com.socks.selectcity.bean.CityBean;
+import com.socks.selectcitymodule.R;
 
 import java.util.List;
 
