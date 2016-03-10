@@ -5,12 +5,14 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Typeface;
+import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.TextView;
 
 import com.socks.selectcity.R;
+import com.socks.selectcity.utils.PxUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,6 +32,7 @@ public class SideBar extends View {
     private int choose = -1;
     private Paint paint = new Paint();
     private TextView mTextDialog;
+    private int textSize;
 
     public SideBar(Context context) {
         this(context, null);
@@ -45,32 +48,37 @@ public class SideBar extends View {
     }
 
     private void init() {
-        setBackgroundColor(getResources().getColor(R.color.side_bg));
+        setBackgroundColor(ContextCompat.getColor(getContext(),R.color.side_bg));
         indexStrings = Arrays.asList(INDEX_STRING);
+        textSize = PxUtils.sp2px(getContext(),15);
     }
 
+    /**
+     * 重写这个方法
+     */
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        int height = getHeight();
         int width = getWidth();
-        int singleHeight = height / indexStrings.size()-1;
+        int height = getHeight();
+        float singleHeight = (height * 1f) / indexStrings.size();// 获取每一个字母的高度
+        singleHeight = (height * 1f - singleHeight / 2) / indexStrings.size();
 
         for (int i = 0; i < indexStrings.size(); i++) {
             paint.setColor(Color.parseColor("#00BFFF"));
             paint.setTypeface(Typeface.DEFAULT_BOLD);
             paint.setAntiAlias(true);
-            paint.setTextSize(24);
+            paint.setTextSize(textSize);
+
             if (i == choose) {
                 paint.setColor(Color.parseColor("#3399ff"));
                 paint.setFakeBoldText(true);
             }
 
             float xPos = width / 2 - paint.measureText(indexStrings.get(i)) / 2;
-            float yPos = singleHeight * i + singleHeight;
+            float yPos = singleHeight*i + singleHeight;
             canvas.drawText(indexStrings.get(i), xPos, yPos, paint);
             paint.reset();
         }
-
     }
 
     @Override
@@ -83,7 +91,7 @@ public class SideBar extends View {
 
         switch (action) {
             case MotionEvent.ACTION_UP:
-                setBackgroundColor(getResources().getColor(R.color.side_bg));
+                setBackgroundColor(ContextCompat.getColor(getContext(),R.color.side_bg));
                 choose = -1;
                 invalidate();
                 if (mTextDialog != null) {

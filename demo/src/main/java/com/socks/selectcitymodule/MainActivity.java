@@ -29,7 +29,7 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity {
 
     private RecyclerView sortListView;
-    private SideBar sideBar;
+    private SideBar sidebar;
     private TextView dialog;
     private SortAdapter adapter;
     private CharacterParser characterParser;
@@ -53,9 +53,8 @@ public class MainActivity extends AppCompatActivity {
     private void initViews() {
         characterParser = CharacterParser.getInstance();
         sortListView = (RecyclerView) findViewById(R.id.country_lvcountry);
-        sideBar = (SideBar) findViewById(R.id.sidrbar);
+        sidebar = (SideBar) findViewById(R.id.letter_bar);
         dialog = (TextView) findViewById(R.id.dialog);
-        sideBar.setTextView(dialog);
 
         SourceDateList = filledJsonData(readFileToJson("city.json"));
         //todo 拼音排序将中文转换成英文开头排序，执行一次就可以了(可以存储起来以后不必重新排序)
@@ -64,17 +63,17 @@ public class MainActivity extends AppCompatActivity {
         mLinearLayoutManager = new LinearLayoutManager(this);
         sortListView.setLayoutManager(mLinearLayoutManager);
         sortListView.setAdapter(adapter);
+        sidebar.setTextView(dialog);
 
-        sideBar.setOnTouchingLetterChangedListener(new SideBar.OnTouchingLetterChangedListener() {
+        sidebar.setOnTouchingLetterChangedListener(new SideBar.OnTouchingLetterChangedListener() {
             @Override
             public void onTouchingLetterChanged(String s) {
                 //滑动到相应位置
-                int position = adapter.getPositionForSection(s.charAt(0));
+                int position = adapter.getPositionForSection(s);
                 if (position != -1) {
                     mIndex = position;
                     moveToPosition(position);
                 }
-
             }
         });
 
@@ -85,7 +84,6 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(getApplication(), cityBean.getName(),Toast.LENGTH_SHORT).show();
             }
         });
-
     }
 
     private JSONArray readFileToJson(String fileName){
@@ -140,7 +138,7 @@ public class MainActivity extends AppCompatActivity {
                 mSortList.add(sortModel);
             }
             Collections.sort(indexString);
-            sideBar.setIndexText(indexString);
+            sidebar.setIndexText(indexString);
         } catch (Exception e){
             e.printStackTrace();
         }
@@ -170,9 +168,7 @@ public class MainActivity extends AppCompatActivity {
             //这里这个变量是用在RecyclerView滚动监听里面的
             move = true;
         }
-
     }
-
 
     /**　滑动处理将tab滑动首个位置　*/
     class RecyclerViewListener extends RecyclerView.OnScrollListener{
